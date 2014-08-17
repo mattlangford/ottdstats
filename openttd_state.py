@@ -2,7 +2,7 @@ from openttd_stats import OpenTTDStats
 
 class OpenTTDState:
 
-    def __init__(self, server):
+    def __init__(self):
         pass
 
     def update(self, openttd_stats):

@@ -27,9 +27,8 @@ class ServerController:
     def __load_server_states(self, db):
         for interface in self.interfaces:
             server = interface.server
-            # sanity check:
-            state = self.server_states[server.id]
-            if state == None:
+            # sanity check
+            if not server.id in self.server_states:
                 state = OpenTTDState()
                 state.load(db)
                 self.server_states[server.id] = state
