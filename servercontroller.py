@@ -13,11 +13,11 @@ class ServerController:
 
     def start_server(self):
 
-
         self.__create_server_interfaces()
 
         db = database.Database()
         db.connect()
+
         self.__load_server_states(db)
 
         db.disconnect()

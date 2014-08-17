@@ -1,11 +1,16 @@
+# This class represents state information derived from
+
 from openttd_stats import OpenTTDStats
 
 class OpenTTDState:
 
     def __init__(self):
+        self.companies = []
+
         pass
 
     def update(self, openttd_stats):
+
         # calculate delta between state
         pass
 
