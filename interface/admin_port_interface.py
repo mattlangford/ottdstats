@@ -18,6 +18,7 @@ class AdminPortInterface(OpenTTDInterface):
 
         connection.configure(
                 name="ottdstats",
+                password=self.server.password,
                 host=self.server.host,
                 port=self.server.port
         )

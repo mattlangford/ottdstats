@@ -1,20 +1,23 @@
 import time
-
+from config import Config
 from database import database
 from openttd_state import OpenTTDState
+from interface.interface_factory import ServerInterfaceFactory
 
 class ServerController:
 
     def __init__(self):
+        self.config = Config()
         self.interfaces = []
         self.server_states = {}
 
     def start_server(self):
 
+
+        self.__create_server_interfaces()
+
         db = database.Database()
         db.connect()
-        self.interfaces = db.get_server_interfaces()
-
         self.__load_server_states(db)
 
         db.disconnect()
@@ -23,6 +26,12 @@ class ServerController:
             for interface in self.interfaces:
                 self.__process_server(interface)
             time.sleep(5)
+
+    def __create_server_interfaces(self):
+        servers = self.config.servers
+
+        for server in servers:
+            self.interfaces.append(ServerInterfaceFactory.createinterface(server))
 
     def __load_server_states(self, db):
         for interface in self.interfaces:
