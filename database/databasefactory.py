@@ -4,8 +4,8 @@ import mysql_database
 class DatabaseFactory:
 
     @staticmethod
-    def createdatabase(type):
-        if type == "mysql":
-            return mysql_database.MysqlDatabase()
+    def createdatabase(dbconfig):
+        if dbconfig.type == "mysql":
+            return mysql_database.MysqlDatabase(dbconfig)
         else:
             raise NotImplementedError(type + " is not implemented or not supported")

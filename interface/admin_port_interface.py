@@ -47,7 +47,7 @@ class AdminPortInterface(OpenTTDInterface):
                 if comp['companyID'] == sub['companyID']:
                     sub['stats'].pop("companyID", None)
                     comp['stats'] = sub['stats']
-                    break;
+                    break
 
     def __match_company_economy(self, companies, company_sub_info):
 
@@ -56,7 +56,7 @@ class AdminPortInterface(OpenTTDInterface):
                 if comp['companyID'] == sub['companyID']:
                     sub.pop("companyID", None)
                     comp['economy'] = sub
-                    break;
+                    break
 
     def __poll_game_info(self, conn):
         try:
@@ -84,7 +84,12 @@ class AdminPortInterface(OpenTTDInterface):
 
         while conn.is_connected:
             # Todo: do this differently.
+            # No idea how much data is coming.
+            # Poll is only unix..
+            # the wait here is a hack since we might timeout before receiving it
+            # so it may come back when we're not expecting
             available = select.select([conn], [], [], 1)
+
 
             if available[0]:
                 result = conn.recv_packet()

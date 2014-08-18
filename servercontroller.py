@@ -3,7 +3,7 @@ from config import Config
 from database import database
 from openttd_state import OpenTTDState
 from interface.interface_factory import ServerInterfaceFactory
-
+from database.databasefactory import DatabaseFactory
 class ServerController:
 
     def __init__(self):
@@ -12,15 +12,15 @@ class ServerController:
         self.server_states = {}
 
     def start_server(self):
+        self.database = DatabaseFactory.createdatabase(self.config.database)
+
 
         self.__create_server_interfaces()
 
-        db = database.Database()
-        db.connect()
+        #db_session = self.database.connect()
+        self.__load_server_states({})
 
-        self.__load_server_states(db)
-
-        db.disconnect()
+        #db_session.close()
 
         while True:
             for interface in self.interfaces:
@@ -47,12 +47,12 @@ class ServerController:
         pass
 
     def __process_server(self, interface):
-        db = database.Database()
-        db.connect()
+        # db = database.Database()
+        # db.connect()
 
         state = self.server_states[interface.server.id]
         stats = interface.do_query()
 
         state.update(stats)
 
-        state.save(db)
+        # state.save(db)

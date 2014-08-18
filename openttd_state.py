@@ -12,6 +12,7 @@ class OpenTTDState:
     def update(self, openttd_stats):
 
         # calculate delta between state
+        # if snapshot date is less than state, create new game - save existing
         pass
 
     def save(self, db):

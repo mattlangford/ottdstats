@@ -1,4 +1,5 @@
 from openttd_server import OpenTTDServer
+from dbconfig import DbConfig
 import json
 
 class Config:
@@ -10,7 +11,7 @@ class Config:
 
     @property
     def database(self):
-        return self.config['config']['database'];
+        return DbConfig(**self.config['config']['database']);
 
     def __init__(self):
         if not self.load():
@@ -38,7 +39,7 @@ class Config:
                         {
                             "servers": [
                                 {
-                                    "id": "server1",
+                                    "name": "server1",
                                     "interface": "adminport",
                                     "host": "localhost",
                                     "port": 3977,
