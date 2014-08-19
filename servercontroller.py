@@ -14,13 +14,10 @@ class ServerController:
     def start_server(self):
         self.database = DatabaseFactory.createdatabase(self.config.database)
 
-
         self.__create_server_interfaces()
 
-        #db_session = self.database.connect()
-        self.__load_server_states({})
-
-        #db_session.close()
+        with self.database.connect() as db_session:
+            self.__load_server_states(db_session)
 
         while True:
             for interface in self.interfaces:

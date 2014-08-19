@@ -4,10 +4,10 @@ class Session:
 
     def __init__(self, conn):
         self.conn = conn
-        #self.cursor = conn.cursor()
+        self.cursor = conn.cursor()
 
-    def __enter__(self, conn):
-        self.__init__(self, conn)
+    def __enter__(self):
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close();
@@ -21,8 +21,11 @@ class Session:
     def rollback(self):
         self.conn.rollback()
 
-    def execute(self, statement, data):
-        return self.conn.execute(statement, data)
+    def execute(self, statement, data=()):
+        self.cursor.execute(statement, data)
+
+    def fetch_results(self):
+        return self.cursor.fetchall()
 
     def close(self):
         self.conn.close()
