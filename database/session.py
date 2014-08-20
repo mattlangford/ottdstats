@@ -10,7 +10,7 @@ class Session:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close();
+        self.close()
 
     def begin(self):
         self.conn.start_transaction()
@@ -24,8 +24,13 @@ class Session:
     def execute(self, statement, data=()):
         self.cursor.execute(statement, data)
 
+    def insert(self, statement, data=()):
+        self.execute(statement, data)
+        return self.cursor.lastrowid
+
     def fetch_results(self):
         return self.cursor.fetchall()
 
     def close(self):
+        self.cursor.close()
         self.conn.close()

@@ -24,6 +24,7 @@ class MysqlDatabase(Database):
             host=self.config.host,
             user=self.config.username,
             password=self.config.password)
+
         db_cursor = cnx.cursor()
 
         db_cursor.execute("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{0}'".format(self.config.database))
@@ -61,8 +62,10 @@ class MysqlDatabase(Database):
 
         if max_version > db_version:
             session.execute("""INSERT INTO upgrade_history (upgrade_date, version)
-                          VALUES('{date}', '{version}')""".format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),version=max_version))
+                          VALUES('{date}', '{version}');""".format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),version=max_version))
 
+        session.commit()
+        session.close()
 
 
     def __create_upgrade_script(self):
@@ -98,7 +101,10 @@ class MysqlDatabase(Database):
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   server_id INTEGER NOT NULL,
                   game_id INTEGER NOT NULL,
-                  company_id INTEGER NOT NULL
+                  company_id INTEGER NOT NULL,
+                  game_date DATETIME,
+                  real_date DATETIME
+
                 );"""
             ,1,sqls)
 

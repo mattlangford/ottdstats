@@ -49,7 +49,7 @@ class Config:
                             "database": {
                                 "type": "mysql",
                                 "host": "localhost",
-                                "port": 0,
+                                "port": 3306,
                                 "username": "",
                                 "password": "",
                                 "database": "ottdstats"

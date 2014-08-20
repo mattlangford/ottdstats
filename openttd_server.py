@@ -2,5 +2,6 @@
 
 class OpenTTDServer:
 
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
+    def __init__(self, **config_entries):
+        self.__dict__.update(config_entries)
+        self.id = -1

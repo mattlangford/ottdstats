@@ -10,6 +10,7 @@ class ServerController:
         self.config = Config()
         self.interfaces = []
         self.server_states = {}
+        self.database = None
 
     def start_server(self):
         self.database = DatabaseFactory.createdatabase(self.config.database)
@@ -31,11 +32,24 @@ class ServerController:
             self.interfaces.append(ServerInterfaceFactory.createinterface(server))
 
     def __load_server_states(self, db):
+        # find database server id
+        db.execute("SELECT id, name FROM server;")
+        db_servers = db.fetch_results()
         for interface in self.interfaces:
             server = interface.server
+
+            for db_server in db_servers:
+                if db_server[1] == server.name:
+                    server.id = db_server[0]
+                    break
+
+            if server.id == -1:
+                server.id = db.insert("INSERT INTO server (name) VALUES(%(name)s)", {'name': server.name})
+                db.commit()
+
             # sanity check
             if not server.id in self.server_states:
-                state = OpenTTDState()
+                state = OpenTTDState(server.id)
                 state.load(db)
                 self.server_states[server.id] = state
 
@@ -44,12 +58,11 @@ class ServerController:
         pass
 
     def __process_server(self, interface):
-        # db = database.Database()
-        # db.connect()
-
         state = self.server_states[interface.server.id]
         stats = interface.do_query()
 
         state.update(stats)
 
-        # state.save(db)
+        with self.database.connect() as db_session:
+            state.save(db_session)
+            db_session.commit()
