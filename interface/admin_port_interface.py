@@ -90,7 +90,6 @@ class AdminPortInterface(OpenTTDInterface):
             # so it may come back when we're not expecting
             available = select.select([conn], [], [], 1)
 
-
             if available[0]:
                 result = conn.recv_packet()
                 array.append(result[1])

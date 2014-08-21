@@ -1,5 +1,6 @@
 from openttd_server import OpenTTDServer
 from dbconfig import DbConfig
+from general import GeneralConfig
 import json
 
 class Config:
@@ -12,6 +13,10 @@ class Config:
     @property
     def database(self):
         return DbConfig(**self.config['config']['database']);
+
+    @property
+    def general(self):
+        return GeneralConfig(**self.config['config']['general']);
 
     def __init__(self):
         if not self.load():
@@ -53,6 +58,10 @@ class Config:
                                 "username": "",
                                 "password": "",
                                 "database": "ottdstats"
+                            },
+                            "general": {
+                                "daemon": False,
+                                "interval": 30
                             }
                         }
                 }

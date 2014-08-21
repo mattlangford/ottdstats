@@ -82,7 +82,7 @@ class MysqlDatabase(Database):
             r"""CREATE TABLE state (
                   server_id INTEGER PRIMARY KEY NOT NULL,
                   last_snapshot TEXT,
-                  last_snapshot_time DATE,
+                  last_snapshot_time DATETIME,
                   game_id INTEGER
             );"""
             ,1,sqls)
@@ -91,8 +91,8 @@ class MysqlDatabase(Database):
             r"""CREATE TABLE game(
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   server_id INTEGER NOT NULL,
-                  game_start DATE,
-                  game_end DATE
+                  game_start DATETIME,
+                  game_end DATETIME
                 );"""
             ,1,sqls)
 
@@ -103,8 +103,19 @@ class MysqlDatabase(Database):
                   game_id INTEGER NOT NULL,
                   company_id INTEGER NOT NULL,
                   game_date DATETIME,
-                  real_date DATETIME
-
+                  real_date DATETIME,
+                  money BIGINT,
+                  income BIGINT,
+                  loan INT,
+                  delivered_cargo INT,
+                  station_bus INT,
+                  station_lorry INT,
+                  station_ship INT,
+                  station_train INT,
+                  vehicle_bus INT,
+                  vehicle_lorry INT,
+                  vehicle_ship INT,
+                  vehicle_train INT
                 );"""
             ,1,sqls)
 

@@ -1,5 +1,4 @@
-import json
-from datetime import datetime
+from jsonhelper import JsonHelper
 
 class OpenTTDStats:
     def __init__(self):
@@ -8,13 +7,8 @@ class OpenTTDStats:
         self.player_info = []
 
     def get_json(self):
-        return json.dumps({
+        return JsonHelper.to_json({
             'company_info': self.company_info,
             'game_info': self.game_info,
             'player_info': self.player_info
-        }, default=self.json_serial)
-
-    def json_serial(self, obj):
-        if isinstance(obj, datetime):
-            serial = obj.isoformat()
-            return serial
+        })

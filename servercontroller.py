@@ -4,6 +4,8 @@ from database import database
 from openttd_state import OpenTTDState
 from interface.interface_factory import ServerInterfaceFactory
 from database.databasefactory import DatabaseFactory
+import logging
+
 class ServerController:
 
     def __init__(self):
@@ -59,10 +61,13 @@ class ServerController:
 
     def __process_server(self, interface):
         state = self.server_states[interface.server.id]
-        stats = interface.do_query()
 
-        state.update(stats)
+        try:
+            stats = interface.do_query()
+        except:
+            logging.debug("Could not query server " + interface.server.name)
+            return
 
         with self.database.connect() as db_session:
-            state.save(db_session)
+            state.update(db_session,stats)
             db_session.commit()

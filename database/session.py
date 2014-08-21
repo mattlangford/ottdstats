@@ -28,6 +28,12 @@ class Session:
         self.execute(statement, data)
         return self.cursor.lastrowid
 
+    def columns(self):
+        cols = {}
+        for idx, desc in enumerate(self.cursor.description):
+            cols[desc[0]] = idx
+        return cols
+
     def fetch_results(self):
         return self.cursor.fetchall()
 
