@@ -8,8 +8,8 @@ import logging
 
 class ServerController:
 
-    def __init__(self):
-        self.config = Config()
+    def __init__(self,startup={}):
+        self.config = Config(startup['config_path'])
         self.interfaces = []
         self.server_states = {}
         self.database = None
@@ -25,7 +25,9 @@ class ServerController:
         while True:
             for interface in self.interfaces:
                 self.__process_server(interface)
-            time.sleep(5)
+            if not self.config.general.daemon:
+                break
+            time.sleep(self.config.general.interval)
 
     def __create_server_interfaces(self):
         servers = self.config.servers
@@ -65,7 +67,7 @@ class ServerController:
         try:
             stats = interface.do_query()
         except Exception as ex:
-            logging.debug("Could not query server " + interface.server.name + ": " + ex.message)
+            logging.warning("Could not query server " + interface.server.name + ": " + ex.message)
             return
 
         try:
@@ -76,6 +78,6 @@ class ServerController:
                     db_session.commit()
                 except Exception as ex:
                     db_session.rollback()
-                    logging.debug("Error updating database from query " + interface.server.name + ": " + ex.message)
+                    logging.error("Error updating database from query " + interface.server.name + ": " + ex.message)
         except Exception as ex:
-            logging.debug("Error connecting to db while trying to update " + interface.server.name + ": " + ex.message)
+            logging.error("Error connecting to db while trying to update " + interface.server.name + ": " + ex.message)

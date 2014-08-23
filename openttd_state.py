@@ -2,6 +2,7 @@
 from datetime import datetime
 from openttd_stats import OpenTTDStats
 from jsonhelper import JsonHelper
+import logging
 
 
 class OpenTTDState:
@@ -18,6 +19,7 @@ class OpenTTDState:
         # game ends when the following condition is met:
         #   - Game date is older than last snapshot date
         if self.last_snapshot is not None and self.last_snapshot.game_info['date'] > new_snapshot.game_info['date']:
+            logging.debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
             db.execute("UPDATE game SET game_end = %(now)s WHERE game_id = %(game_id)s",
                 {
                     'now': datetime.now().isoformat(),
@@ -33,7 +35,7 @@ class OpenTTDState:
         if self.current_game_id > -1:
             # check for companies that should be ended
             # Condition:
-            # - company doesn't exist in snapshot
+            # - company doesn't exist in snapshot, but existed in last
             found = False
             for company_id in self.current_companies.copy():
                 found = False

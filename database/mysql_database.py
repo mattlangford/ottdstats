@@ -2,6 +2,7 @@ from mysql import connector
 from session import Session
 from database import Database
 from datetime import datetime
+import logging
 
 
 class MysqlDatabase(Database):
@@ -35,8 +36,10 @@ class MysqlDatabase(Database):
         if not db_exists:
             try:
                 db_cursor.execute("CREATE DATABASE {0}".format(self.config.database))
-            except:
-                raise Exception('Not able to create database. Please create manually.')
+            except Exception as ex:
+                message = 'Could not create database: ' + ex.msg
+                logging.error(message)
+                raise Exception(message)
 
         cnx.database = self.config.database
 
