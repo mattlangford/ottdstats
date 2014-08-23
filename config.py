@@ -9,13 +9,13 @@ class Config:
     __default_filename = "config.json"
     __full_path = ''
 
-    def __init__(self, config_path=''):
+    def __init__(self, config_path='', dump_default=False):
         if config_path:
             Config.__full_path = config_path
         else:
             Config.__full_path = path.join(Config.__default_filename)
 
-        if not self.load():
+        if dump_default or not self.load():
             self.config = Config.__default()
             self.save()
 

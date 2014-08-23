@@ -16,8 +16,8 @@ class OpenTTDStatsServer:
         if startup['upgrade'] or startup['create_config']:
             if startup['upgrade']:
                 OpenTTDStatsServer.upgrade_or_create_db()
-            if startup['upgrade']:
-                OpenTTDStatsServer.print_config(startup)
+            if startup['create_config']:
+                OpenTTDStatsServer.default_config(startup)
             return
 
         controller = servercontroller.ServerController(startup)
@@ -25,8 +25,11 @@ class OpenTTDStatsServer:
 
     @staticmethod
     def parse_arguments(args):
-
-        parsed_opts, parsed_args = getopt.getopt(args, "udhc:", ["config", "upgrade", 'help', 'config='])
+        try:
+            parsed_opts, parsed_args = getopt.getopt(args, "udhc:", ["config", "upgrade", 'help', 'config='])
+        except getopt.GetoptError as ex:
+            print ex.msg
+            exit(1)
 
         startup = {
             'upgrade': False,
@@ -55,8 +58,8 @@ class OpenTTDStatsServer:
         print "\t-c,--config\t\tSpecify the path for configuration"
 
     @staticmethod
-    def print_config(startup):
-        Config(startup['config'])
+    def default_config(startup):
+        Config(startup['config_path'], True)
 
     @staticmethod
     def upgrade_or_create_db():
