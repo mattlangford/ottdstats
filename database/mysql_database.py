@@ -3,10 +3,12 @@ from session import Session
 from database import Database
 from datetime import datetime
 
+
 class MysqlDatabase(Database):
 
     database_version = 1
     # Abstract this out someday.
+
     def __init__(self, config):
         Database.__init__(self, config)
         self.upgrade()
@@ -67,7 +69,6 @@ class MysqlDatabase(Database):
         session.commit()
         session.close()
 
-
     def __create_upgrade_script(self):
         sqls = []
 
@@ -76,7 +77,7 @@ class MysqlDatabase(Database):
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   name VARCHAR(50)
                 );"""
-            ,1,sqls)
+            , 1, sqls)
 
         self.__append_upgrade_sql(
             r"""CREATE TABLE state (
@@ -85,7 +86,7 @@ class MysqlDatabase(Database):
                   last_snapshot_time DATETIME,
                   game_id INTEGER
             );"""
-            ,1,sqls)
+            , 1, sqls)
 
         self.__append_upgrade_sql(
             r"""CREATE TABLE game(
@@ -94,12 +95,25 @@ class MysqlDatabase(Database):
                   game_start DATETIME,
                   game_end DATETIME
                 );"""
-            ,1,sqls)
+            , 1, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE TABLE game_company(
+                  id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+                  game_id INTEGER NOT NULL,
+                  company_id INTEGER NOT NULL,
+                  start DATETIME,
+                  end DATETIME,
+                  name VARCHAR(50),
+                  color INTEGER,
+                  is_ai BOOLEAN,
+                  manager VARCHAR(50)
+                );"""
+            , 1, sqls)
 
         self.__append_upgrade_sql(
             r"""CREATE TABLE game_history(
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                  server_id INTEGER NOT NULL,
                   game_id INTEGER NOT NULL,
                   company_id INTEGER NOT NULL,
                   game_date DATETIME,
@@ -117,7 +131,7 @@ class MysqlDatabase(Database):
                   vehicle_ship INT,
                   vehicle_train INT
                 );"""
-            ,1,sqls)
+            , 1, sqls)
 
         return sqls
 

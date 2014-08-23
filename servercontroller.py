@@ -1,10 +1,10 @@
 import time
 from config import Config
-from database import database
 from openttd_state import OpenTTDState
 from interface.interface_factory import ServerInterfaceFactory
 from database.databasefactory import DatabaseFactory
 import logging
+
 
 class ServerController:
 
@@ -64,10 +64,18 @@ class ServerController:
 
         try:
             stats = interface.do_query()
-        except:
-            logging.debug("Could not query server " + interface.server.name)
+        except Exception as ex:
+            logging.debug("Could not query server " + interface.server.name + ": " + ex.message)
             return
 
-        with self.database.connect() as db_session:
-            state.update(db_session,stats)
-            db_session.commit()
+        try:
+            with self.database.connect() as db_session:
+                db_session.begin()
+                try:
+                    state.update(db_session, stats)
+                    db_session.commit()
+                except Exception as ex:
+                    db_session.rollback()
+                    logging.debug("Error updating database from query " + interface.server.name + ": " + ex.message)
+        except Exception as ex:
+            logging.debug("Error connecting to db while trying to update " + interface.server.name + ": " + ex.message)

@@ -1,10 +1,16 @@
 from openttd_server import OpenTTDServer
 from dbconfig import DbConfig
 from general import GeneralConfig
-import json
+from jsonhelper import JsonHelper
+
 
 class Config:
     __filename = "config.json"
+
+    def __init__(self):
+        if not self.load():
+            self.config = Config.__default()
+            self.save()
 
     @property
     def servers(self):
@@ -12,33 +18,27 @@ class Config:
 
     @property
     def database(self):
-        return DbConfig(**self.config['config']['database']);
+        return DbConfig(**self.config['config']['database'])
 
     @property
     def general(self):
-        return GeneralConfig(**self.config['config']['general']);
-
-    def __init__(self):
-        if not self.load():
-            self.config = self.default()
-            self.save()
+        return GeneralConfig(**self.config['config']['general'])
 
     def load(self):
         try:
-            with open('config.json', 'r') as f:
-                self.config = json.load(f)
+            self.config = JsonHelper.from_json_file(Config.__filename)
             return True
         except IOError:
             return False
 
     def save(self):
         try:
-            with open(Config.__filename, 'w') as f:
-                json.dump(self.config, f, sort_keys=True, indent=4)
+            self.config = JsonHelper.to_json_file(self.config, Config.__filename)
         except IOError:
             pass
 
-    def default(self):
+    @staticmethod
+    def __default():
         return {
                     "config":
                         {

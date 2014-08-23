@@ -1,5 +1,6 @@
 from jsonhelper import JsonHelper
 
+
 class OpenTTDStats:
     def __init__(self):
         self.company_info = []
