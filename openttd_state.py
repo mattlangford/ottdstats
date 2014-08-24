@@ -20,7 +20,7 @@ class OpenTTDState:
         #   - Game date is older than last snapshot date
         if self.last_snapshot is not None and self.last_snapshot.game_info['date'] > new_snapshot.game_info['date']:
             logging.debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
-            db.execute("UPDATE game SET game_end = %(now)s WHERE game_id = %(game_id)s",
+            db.execute("UPDATE game SET game_end = %(now)s WHERE id = %(game_id)s",
                 {
                     'now': datetime.now().isoformat(),
                     'game_id': self.current_game_id
@@ -28,7 +28,7 @@ class OpenTTDState:
             for company_id in self.current_companies.copy():
                 self.__end_company(db, self.current_companies[company_id]['id'])
 
-            self.current_companies = []
+            self.current_companies = {}
             self.current_game_id = -1
 
         # update existing game
@@ -64,11 +64,11 @@ class OpenTTDState:
         self.last_snapshot = new_snapshot
 
         # temporary for testing
-        JsonHelper.to_json_file({
-            'company_info': self.last_snapshot.company_info,
-            'game_info': self.last_snapshot.game_info,
-            'player_info': self.last_snapshot.player_info
-        }, "test.json")
+        # JsonHelper.to_json_file({
+        #     'company_info': self.last_snapshot.company_info,
+        #     'game_info': self.last_snapshot.game_info,
+        #     'player_info': self.last_snapshot.player_info
+        # }, "test.json")
 
         # save new state to db
         state = {
@@ -122,7 +122,7 @@ class OpenTTDState:
                 'station_bus': '-1',
             }
 
-            if company['economy']:
+            if 'economy' in company:
                 economy = company['economy']
                 insert['money'] = economy['money']
                 if len(economy['history']) > 0:
@@ -131,7 +131,7 @@ class OpenTTDState:
                 insert['loan'] = economy['currentLoan']
                 insert['delivered_cargo'] = economy['deliveredCargo']
 
-            if company['stats']:
+            if 'stats' in company:
                 stats = company['stats']
                 stations = stats['stations']
                 vehicles = stats['vehicles']
@@ -220,7 +220,7 @@ class OpenTTDState:
             assert self.current_game_id > -1
 
             if self.current_game_id > -1:
-                db.execute("SELECT * FROM game_company WHERE game_id = %(game_id)s",
+                db.execute("SELECT * FROM game_company WHERE game_id = %(game_id)s AND end IS NULL",
                            {'game_id': self.current_game_id})
                 companies = db.fetch_results()
                 if len(companies) > 0:

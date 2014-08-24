@@ -29,10 +29,10 @@ class AdminPortInterface(OpenTTDInterface):
 
         stats = OpenTTDStats()
         stats.game_info = self.__poll_game_info(connection)
-        stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO)
-        stats.player_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO)
-        company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS)
-        company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY)
+        stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO, ServerCompanyInfo.packetID)
+        stats.player_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO, ServerClientInfo.packetID)
+        company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS, ServerCompanyStats.packetID)
+        company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY, ServerCompanyEconomy.packetID)
 
         self.__match_company_stats(stats.company_info, company_stats)
         self.__match_company_economy(stats.company_info, company_economy)
@@ -68,12 +68,13 @@ class AdminPortInterface(OpenTTDInterface):
             return None
 
         version = conn.recv_packet()
+
         game_info = conn.recv_packet()[1]
         game_info['date'] = conn.recv_packet()[1]['date']
 
         return game_info
 
-    def __poll_admin_array_info(self, conn, update_type):
+    def __poll_admin_array_info(self, conn, update_type, receive_packet_id):
         array = []
 
         try:
@@ -92,8 +93,9 @@ class AdminPortInterface(OpenTTDInterface):
             available = select.select([conn], [], [], 1)
 
             if available[0]:
-                result = conn.recv_packet()
-                array.append(result[1])
+                packet_type, packet = conn.recv_packet()
+                if packet_type.packetID == receive_packet_id:
+                    array.append(packet)
             else:
                 break
 
