@@ -4,7 +4,7 @@ from libottdadmin2.adminconnection import AdminConnection
 from openttd_stats import OpenTTDStats
 from openttd_interface import OpenTTDInterface
 import select
-
+import logging
 
 class AdminPortInterface(OpenTTDInterface):
 
@@ -24,7 +24,8 @@ class AdminPortInterface(OpenTTDInterface):
         )
 
         if not connection.connect():
-            raise "could not connect"
+            logging.warning("Could not connect to " + self.server.name)
+            return None
 
         stats = OpenTTDStats()
         stats.game_info = self.__poll_game_info(connection)

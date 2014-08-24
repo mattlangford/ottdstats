@@ -106,7 +106,7 @@ class OpenTTDState:
 
             db.execute(
                 'UPDATE game_company SET color=%(color)s, manager=%(manager)s, name=%(name)s '
-                    + 'WHERE game_id = %(game_id) AND company_id = %(company_id)s', existing_company)
+                    + 'WHERE game_id = %(game_id)s AND company_id = %(company_id)s', existing_company)
 
     def __start_company(self, db, company_info):
         new_company = {

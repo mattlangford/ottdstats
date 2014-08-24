@@ -66,8 +66,10 @@ class ServerController:
 
         try:
             stats = interface.do_query()
+            if stats == None:
+                return
         except Exception as ex:
-            logging.warning("Could not query server " + interface.server.name + ": " + ex.message)
+            logging.error("Error trying to query server " + interface.server.name + ": " + ex.message)
             return
 
         try:
