@@ -78,7 +78,7 @@ class MysqlDatabase(Database):
         self.__append_upgrade_sql(
             r"""CREATE TABLE Server (
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                  name VARCHAR(50)
+                  name VARCHAR(100)
                 );"""
             , 1, sqls)
 
@@ -107,10 +107,10 @@ class MysqlDatabase(Database):
                   company_id INTEGER NOT NULL,
                   start DATETIME,
                   end DATETIME,
-                  name VARCHAR(50),
+                  name VARCHAR(100),
                   color INTEGER,
                   is_ai BOOLEAN,
-                  manager VARCHAR(50)
+                  manager VARCHAR(100)
                 );"""
             , 1, sqls)
 
@@ -119,19 +119,24 @@ class MysqlDatabase(Database):
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   game_id INTEGER NOT NULL,
                   company_id INTEGER NOT NULL,
+                  current_company_name VARCHAR(100) NOT NULL,
+                  current_company_manager VARCHAR(100) NOT NULL,
                   game_date DATETIME,
                   real_date DATETIME,
                   money BIGINT,
+                  value BIGINT,
                   income BIGINT,
                   loan INT,
                   delivered_cargo INT,
                   station_bus INT,
                   station_lorry INT,
                   station_ship INT,
+                  station_plane INT,
                   station_train INT,
                   vehicle_bus INT,
                   vehicle_lorry INT,
                   vehicle_ship INT,
+                  vehicle_plane INT,
                   vehicle_train INT
                 );"""
             , 1, sqls)

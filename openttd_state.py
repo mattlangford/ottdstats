@@ -82,15 +82,64 @@ class OpenTTDState:
             'server_id': self.server_id
         }
 
-        self.__insert_game_history(new_snapshot)
+        self.__insert_game_history(db, new_snapshot)
 
         db.execute("INSERT INTO state (server_id, last_snapshot, last_snapshot_time, game_id) "
             + "VALUES(%(server_id)s, %(last_snapshot)s, %(last_snapshot_time)s, %(game_id)s) "
             + "ON DUPLICATE KEY UPDATE last_snapshot=VALUES(last_snapshot),last_snapshot_time=VALUES(last_snapshot_time),"
             + "game_id=VALUES(game_id);", state)
 
-    def __insert_game_history(self, new_snapshot):
-        pass
+    def __insert_game_history(self, db, new_snapshot):
+        for company in new_snapshot.company_info:
+            assert company['companyID'] in self.current_companies
+
+            insert = {
+                'game_id': self.current_game_id,
+                'company_id': self.current_companies[company['companyID']]['id'],
+                'current_company_name': company['name'],
+                'current_company_manager':  company['manager'],
+                'game_date': new_snapshot.game_info['date'].isoformat(),
+                'real_date': datetime.now().isoformat(),
+                'money': '-1',
+                'value': '-1',
+                'income': '-1',
+                'loan': '-1',
+                'delivered_cargo': -1,
+                'station_bus': '-1',
+            }
+
+            if company['economy']:
+                economy = company['economy']
+                insert['money'] = economy['money']
+                if len(economy['history']) > 0:
+                    insert['value'] = economy['history'][0]['companyValue']
+                insert['income'] = economy['income']
+                insert['loan'] = economy['currentLoan']
+                insert['delivered_cargo'] = economy['deliveredCargo']
+
+            if company['stats']:
+                stats = company['stats']
+                stations = stats['stations']
+                vehicles = stats['vehicles']
+                insert['station_bus'] = stations['bus']
+                insert['station_lorry'] = stations['lorry']
+                insert['station_plane'] = stations['plane']
+                insert['station_ship'] = stations['ship']
+                insert['station_train'] = stations['train']
+                insert['vehicle_bus'] = vehicles['bus']
+                insert['vehicle_lorry'] = vehicles['lorry']
+                insert['vehicle_plane'] = vehicles['plane']
+                insert['vehicle_ship'] = vehicles['ship']
+                insert['vehicle_train'] = vehicles['train']
+
+
+            db.execute("INSERT INTO game_history (game_id, company_id, current_company_name, current_company_manager, "
+                + "game_date, real_date, money, value, income, loan, delivered_cargo, station_bus, station_lorry, "
+                + "station_ship, station_plane, station_train, vehicle_bus, vehicle_lorry, vehicle_ship, vehicle_plane, vehicle_train) "
+                + "VALUES(%(game_id)s, %(company_id)s, %(current_company_name)s, %(current_company_manager)s, "
+                + "%(game_date)s, %(real_date)s, %(money)s, %(value)s, %(income)s, %(loan)s, %(delivered_cargo)s, %(station_bus)s, %(station_lorry)s, "
+                + "%(station_ship)s, %(station_plane)s, %(station_train)s, %(vehicle_bus)s, %(vehicle_lorry)s, %(vehicle_ship)s, %(vehicle_plane)s, %(vehicle_train)s)",
+                   insert)
 
     def __update_company(self, db, company_info):
 
