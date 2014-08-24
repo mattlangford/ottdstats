@@ -96,7 +96,13 @@ class MysqlDatabase(Database):
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   server_id INTEGER NOT NULL,
                   game_start DATETIME,
-                  game_end DATETIME
+                  game_end DATETIME,
+                  map_size_x INTEGER,
+                  map_size_y INTEGER,
+                  version VARCHAR(100),
+                  landscape INTEGER,
+                  map_name VARCHAR(100),
+                  seed INTEGER
                 );"""
             , 1, sqls)
 

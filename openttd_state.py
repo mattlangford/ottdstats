@@ -56,11 +56,7 @@ class OpenTTDState:
         # create new game
         if self.current_game_id < 0:
             # time to create a new game.
-            self.current_game_id = db.insert('INSERT INTO game (server_id, game_start) VALUES (%(server_id)s, %(game_start)s)',
-                {
-                    'server_id': self.server_id,
-                    'game_start': self.last_snapshot_time.isoformat()
-                })
+            self.__start_game(db, new_snapshot)
             for company in new_snapshot.company_info:
                 self.__start_company(db, company)
 
@@ -88,6 +84,24 @@ class OpenTTDState:
             + "VALUES(%(server_id)s, %(last_snapshot)s, %(last_snapshot_time)s, %(game_id)s) "
             + "ON DUPLICATE KEY UPDATE last_snapshot=VALUES(last_snapshot),last_snapshot_time=VALUES(last_snapshot_time),"
             + "game_id=VALUES(game_id);", state)
+
+    def __start_game(self, db, new_snapshot):
+        game_info = new_snapshot.game_info
+        insert = {
+                    'server_id': self.server_id,
+                    'game_start': game_info['date'].isoformat(),
+                    'map_size_x': game_info['x'],
+                    'map_size_y': game_info['y'],
+                    'version': game_info['version'],
+                    'landscape': game_info['landscape'],
+                    'map_name': game_info['map_name'],
+                    'seed': game_info['seed']
+                }
+
+        self.current_game_id = db.insert(
+            'INSERT INTO game (server_id, game_start, map_size_x, map_size_y, version, landscape, map_name, seed) '
+            'VALUES (%(server_id)s, %(game_start)s, %(map_size_x)s, %(map_size_y)s, %(version)s, %(landscape)s, '
+            '%(map_name)s, %(seed)s)', insert)
 
     def __insert_game_history(self, db, new_snapshot):
         for company in new_snapshot.company_info:
