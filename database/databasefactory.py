@@ -8,4 +8,4 @@ class DatabaseFactory:
         if dbconfig.type == "mysql":
             return mysql_database.MysqlDatabase(dbconfig)
         else:
-            raise NotImplementedError(type + " is not implemented or not supported")
+            raise NotImplementedError(dbconfig.type + " is not implemented or not supported")

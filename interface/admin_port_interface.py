@@ -27,6 +27,7 @@ class AdminPortInterface(OpenTTDInterface):
             logging.warning("Could not connect to " + self.server.name)
             return None
 
+        # The order is important here - since the first poll (game_info) should return version / welcome
         stats = OpenTTDStats()
         stats.game_info = self.__poll_game_info(connection)
         stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO, ServerCompanyInfo.packetID)
@@ -67,12 +68,37 @@ class AdminPortInterface(OpenTTDInterface):
         except ValidationError:
             return None
 
-        version = conn.recv_packet()
 
-        game_info = conn.recv_packet()[1]
-        game_info['date'] = conn.recv_packet()[1]['date']
+        version = self.__poll_specific_packet(conn, ServerProtocol.packetID)
+        if version is None:
+            self.__packet_error('Protocol')
+
+        game_info =  self.__poll_specific_packet(conn, ServerWelcome.packetID)
+        if game_info is None:
+            self.__packet_error('Welcome')
+
+        game_date =  self.__poll_specific_packet(conn, ServerDate.packetID)
+        if game_date is None:
+            self.__packet_error('Date')
+        game_info['date'] = game_date['date']
 
         return game_info
+
+    def __poll_specific_packet(self, conn, packet_id):
+        # Todo: do this differently.
+        # No idea how much data is coming.
+        # Poll is only unix..
+        # the wait here is a hack since we might timeout before receiving it
+        # so it may come back when we're not expecting
+        while conn.is_connected:
+            available = select.select([conn], [], [], 3)
+
+            if available[0]:
+                packet_type, packet = conn.recv_packet()
+                if packet_type.packetID == packet_id:
+                    return packet
+            else:
+                return None
 
     def __poll_admin_array_info(self, conn, update_type, receive_packet_id):
         array = []
@@ -84,19 +110,16 @@ class AdminPortInterface(OpenTTDInterface):
         except ValidationError:
             return None
 
-        while conn.is_connected:
-            # Todo: do this differently.
-            # No idea how much data is coming.
-            # Poll is only unix..
-            # the wait here is a hack since we might timeout before receiving it
-            # so it may come back when we're not expecting
-            available = select.select([conn], [], [], 1)
-
-            if available[0]:
-                packet_type, packet = conn.recv_packet()
-                if packet_type.packetID == receive_packet_id:
-                    array.append(packet)
+        while True:
+            packet = self.__poll_specific_packet(conn, receive_packet_id)
+            if not packet is None:
+                array.append(packet)
             else:
                 break
 
         return array
+
+    def __packet_error(self, packet_name):
+        # this is logged higher up the stack.
+        # logging.error('admin_port_interface: Expected packet - ' + packet_name + ' - but never received.')
+        raise Exception(msg='Packet ' + packet_name + ' not found')

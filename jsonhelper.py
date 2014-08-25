@@ -5,7 +5,7 @@ from datetime import datetime
 
 class JsonHelper:
 
-    DATE_FORMAT = "%Y-%m-%dT%H:%M:%S" #'%a, %d %b %Y %H:%M:%S UTC'
+    DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
     @staticmethod
     def to_json(obj):

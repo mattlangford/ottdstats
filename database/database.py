@@ -7,6 +7,6 @@ class Database:
         self.config = config
 
     def connect(self):
-        # todo: correct connection pattern
+        # todo: maybe provide more abstraction someday.
 
         pass

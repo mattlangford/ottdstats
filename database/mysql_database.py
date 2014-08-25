@@ -7,8 +7,10 @@ import logging
 
 class MysqlDatabase(Database):
 
+    # db changelog:
+    #   1 - First version before release
+    #   2 - ??
     database_version = 1
-    # Abstract this out someday.
 
     def __init__(self, config):
         Database.__init__(self, config)
@@ -54,7 +56,7 @@ class MysqlDatabase(Database):
             )""")
 
         session.execute("SELECT IFNULL(MAX(version),0) FROM upgrade_history")
-        db_version = session.fetch_results()[0][0] # first row first col
+        db_version = session.fetch_results()[0][0]  # first row first col
 
         script = self.__create_upgrade_script()
 
@@ -67,7 +69,7 @@ class MysqlDatabase(Database):
 
         if max_version > db_version:
             session.execute("""INSERT INTO upgrade_history (upgrade_date, version)
-                          VALUES('{date}', '{version}');""".format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),version=max_version))
+                          VALUES('{date}', '{version}');""".format(date=datetime.now().isoformat(), version=max_version))
 
         session.commit()
         session.close()
@@ -149,6 +151,5 @@ class MysqlDatabase(Database):
 
         return sqls
 
-    def __append_upgrade_sql(self, sql, version, list):
-        list.append({'sql': sql, 'version': version})
-
+    def __append_upgrade_sql(self, sql, version, sql_list):
+        sql_list.append({'sql': sql, 'version': version})

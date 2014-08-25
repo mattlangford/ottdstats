@@ -37,7 +37,7 @@ class OpenTTDStatsServer:
             'usage': False,
             'config_path': ''
         }
-        for opt,arg in parsed_opts:
+        for opt, arg in parsed_opts:
             if opt in ('-u', '--upgrade'):
                 startup['upgrade'] = True
             if opt in ('-d', '--write-default-config'):

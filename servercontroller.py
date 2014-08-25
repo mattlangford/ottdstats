@@ -8,7 +8,7 @@ import logging
 
 class ServerController:
 
-    def __init__(self,startup={}):
+    def __init__(self, startup={}):
         self.config = Config(startup['config_path'])
         self.interfaces = []
         self.server_states = {}
@@ -66,7 +66,7 @@ class ServerController:
 
         try:
             stats = interface.do_query()
-            if stats == None:
+            if stats is None:
                 return
         except Exception as ex:
             logging.error("Error trying to query server " + interface.server.name + ": " + ex.message)
