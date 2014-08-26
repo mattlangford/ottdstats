@@ -7,10 +7,15 @@ import logging
 
 class MysqlDatabase(Database):
 
+    # To modify database
+    # - increment below database_version variable
+    # - append sql statements to script at the end of this class
+
     # db changelog:
     #   1 - First version before release
-    #   2 - ??
-    database_version = 1
+    #   2 - Creating indexes
+    #   3 - ???
+    database_version = 2
 
     def __init__(self, config):
         Database.__init__(self, config)
@@ -51,7 +56,7 @@ class MysqlDatabase(Database):
         session.execute("""
             CREATE TABLE IF NOT EXISTS upgrade_history (
               id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
-              upgrade_date DATE,
+              upgrade_date DATETIME,
               version INTEGER
             )""")
 
@@ -148,6 +153,43 @@ class MysqlDatabase(Database):
                   vehicle_train INT
                 );"""
             , 1, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_server_id ON game (
+                  server_id
+                );"""
+            , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_company_company_id ON game_company (
+                  company_id
+                );"""
+            , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_company_game_id ON game_company (
+                  game_id
+                );"""
+            , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_company_game_id_end ON game_company (
+                  game_id,
+                  end
+                );"""
+            , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_history_game_id ON game_history (
+                  game_id
+                );"""
+            , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_history_company_id ON game_history (
+                  company_id
+                );"""
+            , 2, sqls)
 
         return sqls
 

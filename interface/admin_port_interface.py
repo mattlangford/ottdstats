@@ -35,8 +35,10 @@ class AdminPortInterface(OpenTTDInterface):
         company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS, ServerCompanyStats.packetID)
         company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY, ServerCompanyEconomy.packetID)
 
-        self.__match_company_stats(stats.company_info, company_stats)
-        self.__match_company_economy(stats.company_info, company_economy)
+        if company_stats:
+            self.__match_company_stats(stats.company_info, company_stats)
+        if company_economy:
+            self.__match_company_economy(stats.company_info, company_economy)
 
         connection.disconnect()
 

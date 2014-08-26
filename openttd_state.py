@@ -20,9 +20,9 @@ class OpenTTDState:
         #   - Game date is older than last snapshot date
         if self.last_snapshot is not None and self.last_snapshot.game_info['date'] > new_snapshot.game_info['date']:
             logging.debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
-            db.execute("UPDATE game SET game_end = %(now)s WHERE id = %(game_id)s",
+            db.execute("UPDATE game SET game_end = %(game_end)s WHERE id = %(game_id)s",
                 {
-                    'now': datetime.now().isoformat(),
+                    'game_end': self.last_snapshot.game_info['date'].isoformat(),
                     'game_id': self.current_game_id
                 })
             for company_id in self.current_companies.copy():
