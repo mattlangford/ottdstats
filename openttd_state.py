@@ -276,9 +276,10 @@ class OpenTTDState:
 
                         # load clients...
                         db.execute("SELECT * FROM game_company_client WHERE game_id = %(game_id)s AND "
-                                   "company_id = %(company_id)s",  {'game_id': self.current_game_id, 'company_id': company_id})
+                                   "company_id = %(company_id)s",  {'game_id': self.current_game_id, 'company_id': company[cols['id']]})
                         clients = db.fetch_results()
+                        client_cols = db.columns()
                         if len(clients) > 0:
                             for client in clients:
-                                key = client['name'] + '|' + client['hostname']
-                                self.current_companies[company_id]['clients'][key] = client['client_id']
+                                key = client[client_cols['name']] + '|' + client[client_cols['hostname']]
+                                self.current_companies[company_id]['clients'][key] = client[client_cols['client_id']]

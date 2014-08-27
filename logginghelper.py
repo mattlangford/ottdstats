@@ -1,23 +1,24 @@
 import logging
 import datetime
 
-__log_format = "ottdstats: %(timestamp)s: %(message)s"
+__log_format = "{timestamp} {message}"
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger('ottdstats')
 
 def log_debug(message):
-    logging.debug(__create_log_entry(message))
+    logger.debug(__create_log_entry(message))
 
 def log_error(message):
-    logging.debug(__create_log_entry(message))
+    logger.error(__create_log_entry(message), exc_info=True)
 
 def log_info(message):
-    logging.debug(__create_log_entry(message))
+    logger.info(__create_log_entry(message))
 
 def log_warning(message):
-    logging.debug(__create_log_entry(message))
+    logger.warning(__create_log_entry(message))
 
 def __create_log_entry(message):
-    return __log_format.format({
-        'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'message': message
-    })
+    return __log_format.format(
+        timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        message=message)
 
