@@ -124,4 +124,4 @@ class AdminPortInterface(OpenTTDInterface):
     def __packet_error(self, packet_name):
         # this is logged higher up the stack.
         # logging.error('admin_port_interface: Expected packet - ' + packet_name + ' - but never received.')
-        raise Exception(msg='Packet ' + packet_name + ' not found')
+        raise Exception('Packet ' + packet_name + ' expected, but not found while listening on socket')
