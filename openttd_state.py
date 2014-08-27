@@ -190,16 +190,24 @@ class OpenTTDState:
                 existing_company['clients'][key] = client['clientID']
                 self.__insert_client(db, client, existing_company['id'])
 
-        if(not existing_company['name'] == company_info['name']
+        if(True or not existing_company['name'] == company_info['name']
             or not existing_company['manager'] == company_info['manager']
             or not existing_company['color'] == company_info['colour']):
             existing_company['color'] = company_info['colour']
             existing_company['name'] = company_info['name']
             existing_company['manager'] = company_info['manager']
 
+            update = {
+                'game_id': self.current_game_id,
+                'company_id': existing_company['id'],
+                'color': company_info['colour'],
+                'manager': company_info['manager'],
+                'name': company_info['name']
+            }
+
             db.execute(
                 'UPDATE game_company SET color=%(color)s, manager=%(manager)s, name=%(name)s '
-                    + 'WHERE game_id = %(game_id)s AND company_id = %(company_id)s', existing_company)
+                    + 'WHERE game_id = %(game_id)s AND company_id = %(company_id)s', update)
 
     def __start_company(self, db, company_info, client_info):
         new_company = {
