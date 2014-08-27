@@ -3,19 +3,21 @@ from session import Session
 from database import Database
 from datetime import datetime
 import logging
+import logginghelper
 
 
 class MysqlDatabase(Database):
 
     # To modify database
     # - increment below database_version variable
-    # - append sql statements to script at the end of this class
+    # - append sql statements to script at the end of this class using new version
 
     # db changelog:
     #   1 - First version before release
     #   2 - Creating indexes
-    #   3 - ???
-    database_version = 2
+    #   3 - Create Client table
+    #   4 - ???
+    database_version = 3
 
     def __init__(self, config):
         Database.__init__(self, config)
@@ -75,6 +77,7 @@ class MysqlDatabase(Database):
         if max_version > db_version:
             session.execute("""INSERT INTO upgrade_history (upgrade_date, version)
                           VALUES('{date}', '{version}');""".format(date=datetime.now().isoformat(), version=max_version))
+            logginghelper.log_debug('Upgraded database to version ' + str(max_version))
 
         session.commit()
         session.close()
@@ -83,7 +86,7 @@ class MysqlDatabase(Database):
         sqls = []
 
         self.__append_upgrade_sql(
-            r"""CREATE TABLE Server (
+            r"""CREATE TABLE server (
                   id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
                   name VARCHAR(100)
                 );"""
@@ -190,6 +193,38 @@ class MysqlDatabase(Database):
                   company_id
                 );"""
             , 2, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE TABLE game_company_client(
+                  id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
+                  game_id INTEGER NOT NULL,
+                  company_id INTEGER NOT NULL,
+                  first_join DATETIME,
+                  hostname VARCHAR(100),
+                  client_id INTEGER,
+                  name VARCHAR(100)
+                );"""
+            , 3, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_company_client_game_id ON game_company_client (
+                  game_id
+                );"""
+            , 3, sqls)
+
+        self.__append_upgrade_sql(
+            r"""CREATE INDEX idx_game_company_client_hostname ON game_company_client (
+                  hostname
+                );"""
+            , 3, sqls)
+
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game ADD real_start DATETIME;"""
+            , 3, sqls)
+
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game ADD real_end DATETIME;"""
+            , 3, sqls)
 
         return sqls
 

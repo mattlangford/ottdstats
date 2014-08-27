@@ -31,7 +31,7 @@ class AdminPortInterface(OpenTTDInterface):
         stats = OpenTTDStats()
         stats.game_info = self.__poll_game_info(connection)
         stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO, ServerCompanyInfo.packetID)
-        stats.player_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO, ServerClientInfo.packetID)
+        stats.client_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO, ServerClientInfo.packetID)
         company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS, ServerCompanyStats.packetID)
         company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY, ServerCompanyEconomy.packetID)
 

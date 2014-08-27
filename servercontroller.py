@@ -3,8 +3,8 @@ from config import Config
 from openttd_state import OpenTTDState
 from interface.interface_factory import ServerInterfaceFactory
 from database.databasefactory import DatabaseFactory
-import logging
-
+from query_thread import QueryThread
+import logginghelper
 
 class ServerController:
 
@@ -15,6 +15,7 @@ class ServerController:
         self.database = None
 
     def start_server(self):
+        logginghelper.log_info('Starting server as a ' + ('daemon' if self.config.general.daemon else 'script'))
         self.database = DatabaseFactory.createdatabase(self.config.database)
 
         self.__create_server_interfaces()
@@ -22,12 +23,7 @@ class ServerController:
         with self.database.connect() as db_session:
             self.__load_server_states(db_session)
 
-        while True:
-            for interface in self.interfaces:
-                self.__process_server(interface)
-            if not self.config.general.daemon:
-                break
-            time.sleep(self.config.general.interval)
+        self.__start_thread_loop()
 
     def __create_server_interfaces(self):
         servers = self.config.servers
@@ -58,28 +54,20 @@ class ServerController:
                 self.server_states[server.id] = state
 
     def __start_thread_loop(self):
-        # at some point...
-        pass
+        while True:
+            threads = []
+            for interface in self.interfaces:
+                state = self.server_states[interface.server.id]
+                thread = QueryThread(interface, self.database, state)
+                thread.start()
+                threads.append(thread)
 
-    def __process_server(self, interface):
-        state = self.server_states[interface.server.id]
+            # wait for all threads
+            for t in threads:
+                t.join()
 
-        try:
-            stats = interface.do_query()
-            if stats is None:
-                return
-        except Exception as ex:
-            logging.error("Error trying to query server " + interface.server.name + ": " + ex.message)
-            return
+            if not self.config.general.daemon:
+                break
+            time.sleep(self.config.general.interval)
 
-        try:
-            with self.database.connect() as db_session:
-                db_session.begin()
-                try:
-                    state.update(db_session, stats)
-                    db_session.commit()
-                except Exception as ex:
-                    db_session.rollback()
-                    logging.error("Error updating database from query " + interface.server.name + ": " + ex.message)
-        except Exception as ex:
-            logging.error("Error connecting to db while trying to update " + interface.server.name + ": " + ex.message)
+

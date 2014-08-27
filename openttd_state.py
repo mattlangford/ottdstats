@@ -2,7 +2,7 @@
 from datetime import datetime
 from openttd_stats import OpenTTDStats
 from jsonhelper import JsonHelper
-import logging
+import logginghelper
 
 
 class OpenTTDState:
@@ -19,9 +19,11 @@ class OpenTTDState:
         # game ends when the following condition is met:
         #   - Game date is older than last snapshot date
         if self.last_snapshot is not None and self.last_snapshot.game_info['date'] > new_snapshot.game_info['date']:
-            logging.debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
-            db.execute("UPDATE game SET game_end = %(game_end)s WHERE id = %(game_id)s",
+            logginghelper.log_debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
+
+            db.execute("UPDATE game SET game_end = %(game_end)s, real_end = %(real_end) WHERE id = %(game_id)s",
                 {
+                    'real_end': datetime.now().isoformat(),
                     'game_end': self.last_snapshot.game_info['date'].isoformat(),
                     'game_id': self.current_game_id
                 })
@@ -48,27 +50,35 @@ class OpenTTDState:
 
             # check for companies that should be started
             for company_info in new_snapshot.company_info:
+                clients = []
+                for client in  new_snapshot.client_info:
+                    if client['play_as'] == company_info['companyID']:
+                        clients.append(client)
                 if not company_info['companyID'] in self.current_companies:
-                    self.__start_company(db, company_info)
+                    self.__start_company(db, company_info, clients)
                 else:
-                    self.__update_company(db, company_info)
+                    self.__update_company(db, company_info, clients)
 
         # create new game
         if self.current_game_id < 0:
             # time to create a new game.
             self.__start_game(db, new_snapshot)
             for company in new_snapshot.company_info:
-                self.__start_company(db, company)
+                clients = []
+                for client in  new_snapshot.client_info:
+                    if client['play_as'] == company['companyID']:
+                        clients.append(client)
+                self.__start_company(db, company, clients)
 
         self.last_snapshot_time = datetime.now()
         self.last_snapshot = new_snapshot
 
         # temporary for testing
-        # JsonHelper.to_json_file({
-        #     'company_info': self.last_snapshot.company_info,
-        #     'game_info': self.last_snapshot.game_info,
-        #     'player_info': self.last_snapshot.player_info
-        # }, "test.json")
+        JsonHelper.to_json_file({
+            'company_info': self.last_snapshot.company_info,
+            'game_info': self.last_snapshot.game_info,
+            'client_info': self.last_snapshot.client_info
+        }, "last_snapshot_sid" + str(self.server_id) + ".json")
 
         # save new state to db
         state = {
@@ -90,6 +100,7 @@ class OpenTTDState:
         insert = {
                     'server_id': self.server_id,
                     'game_start': game_info['date'].isoformat(),
+                    'real_start': datetime.now().isoformat(),
                     'map_size_x': game_info['x'],
                     'map_size_y': game_info['y'],
                     'version': game_info['version'],
@@ -99,8 +110,8 @@ class OpenTTDState:
                 }
 
         self.current_game_id = db.insert(
-            'INSERT INTO game (server_id, game_start, map_size_x, map_size_y, version, landscape, map_name, seed) '
-            'VALUES (%(server_id)s, %(game_start)s, %(map_size_x)s, %(map_size_y)s, %(version)s, %(landscape)s, '
+            'INSERT INTO game (server_id, game_start, real_start, map_size_x, map_size_y, version, landscape, map_name, seed) '
+            'VALUES (%(server_id)s, %(game_start)s, %(real_start)s, %(map_size_x)s, %(map_size_y)s, %(version)s, %(landscape)s, '
             '%(map_name)s, %(seed)s)', insert)
 
     def __insert_game_history(self, db, new_snapshot):
@@ -155,11 +166,30 @@ class OpenTTDState:
                 + "%(station_ship)s, %(station_plane)s, %(station_train)s, %(vehicle_bus)s, %(vehicle_lorry)s, %(vehicle_ship)s, %(vehicle_plane)s, %(vehicle_train)s)",
                    insert)
 
-    def __update_company(self, db, company_info):
+    def __insert_client(self, db, client, company_id):
+        insert = {
+                    'game_id': self.current_game_id,
+                    'company_id': company_id,
+                    'first_join': datetime.now().isoformat(),
+                    'hostname': client['hostname'],
+                    'client_id': client['clientID'],
+                    'name': client['name']
+                }
+
+        db.insert('INSERT INTO game_company_client (game_id, company_id, first_join, hostname, client_id, name)'
+            + ' VALUES (%(game_id)s, %(company_id)s, %(first_join)s, %(hostname)s, %(client_id)s, %(name)s)', insert)
+
+    def __update_company(self, db, company_info, client_info):
 
         assert company_info['companyID'] in self.current_companies
 
         existing_company = self.current_companies[company_info['companyID']]
+        for client in client_info:
+            key = client['name'] + '|' + client['hostname']
+            if key not in existing_company['clients']:
+                existing_company['clients'][key] = client['clientID']
+                self.__insert_client(db, client, existing_company['id'])
+
         if(not existing_company['name'] == company_info['name']
             or not existing_company['manager'] == company_info['manager']
             or not existing_company['color'] == company_info['colour']):
@@ -171,7 +201,7 @@ class OpenTTDState:
                 'UPDATE game_company SET color=%(color)s, manager=%(manager)s, name=%(name)s '
                     + 'WHERE game_id = %(game_id)s AND company_id = %(company_id)s', existing_company)
 
-    def __start_company(self, db, company_info):
+    def __start_company(self, db, company_info, client_info):
         new_company = {
             'game_id': self.current_game_id,
             'company_id': company_info['companyID'],
@@ -188,6 +218,12 @@ class OpenTTDState:
         assert not new_company['company_id'] in self.current_companies
 
         self.current_companies[new_company['company_id']] = new_company
+        new_company['clients'] = {}
+        for client in client_info:
+            key = client['name'] + '|' + client['hostname']
+
+            new_company['clients'][key] = client['clientID']
+            self.__insert_client(db, client, new_company['id'])
 
     def __end_company(self, db, id):
         db.execute("UPDATE game_company SET end = %(now)s WHERE id = %(id)s",
@@ -212,7 +248,7 @@ class OpenTTDState:
             self.last_snapshot = OpenTTDStats()
             self.last_snapshot.company_info = snapshot['company_info']
             self.last_snapshot.game_info = snapshot['game_info']
-            self.last_snapshot.player_info = snapshot['player_info']
+            self.last_snapshot.client_info = snapshot['client_info']
 
             self.last_snapshot_time = state[cols['last_snapshot_time']]
             self.current_game_id = state[cols['game_id']]
@@ -235,4 +271,14 @@ class OpenTTDState:
                                 'color': company[cols['color']],
                                 'manager': company[cols['manager']],
                                 'name': company[cols['name']],
+                                'clients': {}
                             }
+
+                        # load clients...
+                        db.execute("SELECT * FROM game_company_client WHERE game_id = %(game_id)s AND "
+                                   "company_id = %(company_id)s",  {'game_id': self.current_game_id, 'company_id': company_id})
+                        clients = db.fetch_results()
+                        if len(clients) > 0:
+                            for client in clients:
+                                key = client['name'] + '|' + client['hostname']
+                                self.current_companies[company_id]['clients'][key] = client['client_id']
