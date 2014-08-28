@@ -21,7 +21,7 @@ class OpenTTDState:
         if self.last_snapshot is not None and self.last_snapshot.game_info['date'] > new_snapshot.game_info['date']:
             logginghelper.log_debug('ottdstats: Ending game number{0}'.format(self.current_game_id))
 
-            db.execute("UPDATE game SET game_end = %(game_end)s, real_end = %(real_end) WHERE id = %(game_id)s",
+            db.execute("UPDATE game SET game_end = %(game_end)s, real_end = %(real_end)s WHERE id = %(game_id)s",
                 {
                     'real_end': datetime.now().isoformat(),
                     'game_end': self.last_snapshot.game_info['date'].isoformat(),
