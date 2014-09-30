@@ -2,7 +2,7 @@ import logging
 import datetime
 
 __log_format = "{timestamp} {message}"
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('ottdstats')
 
 def log_debug(message):

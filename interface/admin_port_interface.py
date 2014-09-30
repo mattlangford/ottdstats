@@ -10,7 +10,6 @@ class AdminPortInterface(OpenTTDInterface):
 
     def __init__(self, openttd_server):
         OpenTTDInterface.__init__(self, openttd_server)
-        pass
 
     def do_query(self):
 

@@ -56,6 +56,12 @@ class Config:
                                     "host": "localhost",
                                     "port": 3977,
                                     "password": ""
+                                },
+                                {
+                                    "name": "server2",
+                                    "interface": "ottdpoxy",
+                                    "url": "http://localhost:3017/stats",
+                                    "password": ""
                                 }
                             ],
                             "database": {
