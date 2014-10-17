@@ -26,12 +26,14 @@ class QueryThread (threading.Thread):
         try:
             with self.database.connect() as db_session:
                 db_session.begin()
+                restore_point = self.state.copy()
                 try:
                     self.state.update(db_session, stats)
                     db_session.commit()
                     logginghelper.log_debug('Updated database for ' + self.interface.server.name)
                 except Exception as ex:
                     db_session.rollback()
+                    self.state.restore(restore_point)
                     logginghelper.log_error("Error updating database from query " + self.interface.server.name + ": " + ex.message)
         except Exception as ex:
             logginghelper.log_error("Error connecting to db while trying to update " + self.interface.server.name + ": " + ex.message)

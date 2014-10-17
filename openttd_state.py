@@ -3,6 +3,7 @@ from datetime import datetime
 from openttd_stats import OpenTTDStats
 from jsonhelper import JsonHelper
 import logginghelper
+import copy
 
 
 class OpenTTDState:
@@ -13,6 +14,16 @@ class OpenTTDState:
         self.current_game_id = -1
         self.last_snapshot = None
         self.last_snapshot_time = datetime.now()
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def restore(self, copy):
+        self.current_companies = copy.current_companies
+        self.server_id = copy.server_id
+        self.current_game_id = copy.current_game_id
+        self.last_snapshot = copy.last_snapshot
+        self.last_snapshot_time = copy.last_snapshot_time
 
     def update(self, db, new_snapshot):
 
@@ -74,11 +85,11 @@ class OpenTTDState:
         self.last_snapshot = new_snapshot
 
         # temporary for testing
-        JsonHelper.to_json_file({
-            'company_info': self.last_snapshot.company_info,
-            'game_info': self.last_snapshot.game_info,
-            'client_info': self.last_snapshot.client_info
-        }, "last_snapshot_sid" + str(self.server_id) + ".json")
+        # JsonHelper.to_json_file({
+        #     'company_info': self.last_snapshot.company_info,
+        #     'game_info': self.last_snapshot.game_info,
+        #     'client_info': self.last_snapshot.client_info
+        # }, "last_snapshot_sid" + str(self.server_id) + ".json")
 
         # save new state to db
         state = {
@@ -157,7 +168,6 @@ class OpenTTDState:
                 insert['vehicle_ship'] = vehicles['ship']
                 insert['vehicle_train'] = vehicles['train']
 
-
             db.execute("INSERT INTO game_history (game_id, company_id, current_company_name, current_company_manager, "
                 + "game_date, real_date, money, value, income, loan, delivered_cargo, station_bus, station_lorry, "
                 + "station_ship, station_plane, station_train, vehicle_bus, vehicle_lorry, vehicle_ship, vehicle_plane, vehicle_train) "
@@ -190,7 +200,7 @@ class OpenTTDState:
                 existing_company['clients'][key] = client['clientID']
                 self.__insert_client(db, client, existing_company['id'])
 
-        if(True or not existing_company['name'] == company_info['name']
+        if(not existing_company['name'] == company_info['name']
             or not existing_company['manager'] == company_info['manager']
             or not existing_company['color'] == company_info['colour']):
             existing_company['color'] = company_info['colour']
