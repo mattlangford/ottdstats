@@ -1,5 +1,8 @@
 import threading
 import logginghelper
+import datetime
+import traceback
+from jsonhelper import JsonHelper
 
 
 class QueryThread (threading.Thread):
@@ -33,6 +36,14 @@ class QueryThread (threading.Thread):
                     logginghelper.log_debug('Updated database for ' + self.interface.server.name)
                 except Exception as ex:
                     db_session.rollback()
+
+                    JsonHelper.to_json_file({
+                        'error': traceback.format_exc(),
+                        'company_info': self.state.last_snapshot.company_info,
+                        'game_info': self.state.last_snapshot.game_info,
+                        'client_info': self.state.last_snapshot.client_info
+                    }, "ERROR_" +datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S") + "_snapshot_sid" + str(self.state.server_id) + ".json")
+
                     self.state.restore(restore_point)
                     logginghelper.log_error("Error updating database from query " + self.interface.server.name + ": " + ex.message)
         except Exception as ex:
