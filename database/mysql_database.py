@@ -28,7 +28,10 @@ class MysqlDatabase(Database):
             host=self.config.host,
             user=self.config.username,
             database=self.config.database,
-            password=self.config.password)
+            password=self.config.password,
+            collation='utf8_unicode_ci',
+            charset='utf8',
+            use_unicode=False)
         return Session(cnx)
 
     def upgrade(self):
