@@ -3,6 +3,7 @@ from libottdadmin2.enums import *
 from libottdadmin2.adminconnection import AdminConnection
 from openttd_stats import OpenTTDStats
 from openttd_interface import OpenTTDInterface
+from jsonhelper import JsonHelper
 import select
 import logging
 
@@ -40,6 +41,11 @@ class AdminPortInterface(OpenTTDInterface):
             self.__match_company_economy(stats.company_info, company_economy)
 
         connection.disconnect()
+
+        # normalize values (convert to unicode)
+        stats.game_info = JsonHelper.from_json(JsonHelper.to_json(stats.game_info))
+        stats.company_info = JsonHelper.from_json(JsonHelper.to_json(stats.company_info))
+        stats.client_info = JsonHelper.from_json(JsonHelper.to_json(stats.client_info))
 
         return stats
 

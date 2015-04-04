@@ -20,5 +20,5 @@ def log_warning(message):
 def __create_log_entry(message):
     return __log_format.format(
         timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        message=message)
+        message=message.encode('utf-8'))
 

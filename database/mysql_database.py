@@ -16,7 +16,8 @@ class MysqlDatabase(Database):
     #   1 - First version before release
     #   2 - Creating indexes
     #   3 - Create Client table
-    #   4 - ???
+    #   5 - Support UTF8 encoding in tables
+    #   5 - ???
     database_version = 3
 
     def __init__(self, config):
@@ -30,8 +31,7 @@ class MysqlDatabase(Database):
             database=self.config.database,
             password=self.config.password,
             collation='utf8_unicode_ci',
-            charset='utf8',
-            use_unicode=False)
+            charset='utf8')
         return Session(cnx)
 
     def upgrade(self):
@@ -228,6 +228,27 @@ class MysqlDatabase(Database):
         self.__append_upgrade_sql(
             r"""ALTER TABLE game ADD real_end DATETIME;"""
             , 3, sqls)
+
+        # Support UTF-8
+
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game_history CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game_company CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game_company_client CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE game CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE state CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
+        self.__append_upgrade_sql(
+            r"""ALTER TABLE server CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;"""
+            , 4, sqls)
 
         return sqls
 
