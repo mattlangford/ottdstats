@@ -1,3 +1,5 @@
+Original source is here: https://hg.openttdcoop.org/ottdstats
+
 ottdstats is a python script/app that connect to OpenTTD servers and records history and state
 into a mysql database, for future reporting
 
@@ -7,6 +9,7 @@ Usage: python server.py [options]
 
 libottdadmin2 (https://github.com/Xaroth/libottdadmin2)
 mysql (http://dev.mysql.com/downloads/connector/python/)
+requests (Command: easy_install requests)
 
 Usage: python server.py
 

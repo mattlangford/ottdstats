@@ -36,6 +36,7 @@ class QueryThread (threading.Thread):
                     logginghelper.log_debug('Updated database for ' + self.interface.server.name)
                 except Exception as ex:
                     db_session.rollback()
+                    logginghelper.log_error("Error updating database from query " + self.interface.server.name + ": " + ex.message)
 
                     JsonHelper.to_json_file({
                         'error': traceback.format_exc(),
@@ -45,6 +46,5 @@ class QueryThread (threading.Thread):
                     }, "ERROR_" +datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S") + "_snapshot_sid" + str(self.state.server_id) + ".json")
 
                     self.state.restore(restore_point)
-                    logginghelper.log_error("Error updating database from query " + self.interface.server.name + ": " + ex.message)
         except Exception as ex:
             logginghelper.log_error("Error connecting to db while trying to update " + self.interface.server.name + ": " + ex.message)

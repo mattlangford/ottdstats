@@ -115,7 +115,7 @@ class MysqlDatabase(Database):
                   version VARCHAR(100),
                   landscape INTEGER,
                   map_name VARCHAR(100),
-                  seed INTEGER
+                  seed INTEGER UNSIGNED
                 );"""
             , 1, sqls)
 
