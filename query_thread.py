@@ -1,8 +1,8 @@
 import threading
-import logginghelper
+from . import logginghelper
 import datetime
 import traceback
-from jsonhelper import JsonHelper
+from .jsonhelper import JsonHelper
 
 
 class QueryThread (threading.Thread):

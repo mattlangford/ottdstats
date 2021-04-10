@@ -1,5 +1,5 @@
 from openttd_stats import OpenTTDStats
-from openttd_interface import OpenTTDInterface
+from .openttd_interface import OpenTTDInterface
 from jsonhelper import JsonHelper
 import logginghelper
 import requests

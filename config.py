@@ -1,7 +1,7 @@
-from openttd_server import OpenTTDServer
-from dbconfig import DbConfig
-from general import GeneralConfig
-from jsonhelper import JsonHelper
+from .openttd_server import OpenTTDServer
+from .dbconfig import DbConfig
+from .general import GeneralConfig
+from .jsonhelper import JsonHelper
 from os import path
 
 
@@ -21,7 +21,7 @@ class Config:
 
     @property
     def servers(self):
-        return map(lambda x: OpenTTDServer(**x), self.config['config']['servers'])
+        return [OpenTTDServer(**x) for x in self.config['config']['servers']]
 
     @property
     def database(self):

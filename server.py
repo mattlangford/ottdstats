@@ -1,7 +1,7 @@
 import sys
-import servercontroller
-from config import Config
-from database.databasefactory import DatabaseFactory
+from . import servercontroller
+from .config import Config
+from .database.databasefactory import DatabaseFactory
 import getopt
 
 class OpenTTDStatsServer:
@@ -28,7 +28,7 @@ class OpenTTDStatsServer:
         try:
             parsed_opts, parsed_args = getopt.getopt(args, "udhc:", ["config", "upgrade", 'help', 'config='])
         except getopt.GetoptError as ex:
-            print ex.msg
+            print((ex.msg))
             exit(1)
 
         startup = {
@@ -51,11 +51,11 @@ class OpenTTDStatsServer:
 
     @staticmethod
     def print_commandline_help():
-        print "Usage: python server.py [options]"
-        print "\n\t-h,--help \t\tprint this help and exit"
-        print "\t-u,--upgrade\t\tupgrade database and exit"
-        print "\t-d,--default-config\tWrite the default configuration file and exit"
-        print "\t-c,--config\t\tSpecify the path for configuration"
+        print("Usage: python server.py [options]")
+        print("\n\t-h,--help \t\tprint this help and exit")
+        print("\t-u,--upgrade\t\tupgrade database and exit")
+        print("\t-d,--default-config\tWrite the default configuration file and exit")
+        print("\t-c,--config\t\tSpecify the path for configuration")
 
     @staticmethod
     def default_config(startup):

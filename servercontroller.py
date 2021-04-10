@@ -1,10 +1,10 @@
 import time
-from config import Config
-from openttd_state import OpenTTDState
-from interface.interface_factory import ServerInterfaceFactory
-from database.databasefactory import DatabaseFactory
-from query_thread import QueryThread
-import logginghelper
+from .config import Config
+from .openttd_state import OpenTTDState
+from .interface.interface_factory import ServerInterfaceFactory
+from .database.databasefactory import DatabaseFactory
+from .query_thread import QueryThread
+from . import logginghelper
 
 class ServerController:
 

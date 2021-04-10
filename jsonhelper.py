@@ -33,8 +33,8 @@ class JsonHelper:
 
     @staticmethod
     def __deserializer_helper(dct):
-        for k, v in dct.items():
-            if isinstance(v, basestring) and len(v) == 19:
+        for k, v in list(dct.items()):
+            if isinstance(v, str) and len(v) == 19:
                 try:
                     dct[k] = datetime.strptime(v, JsonHelper.DATE_FORMAT)
                 except:

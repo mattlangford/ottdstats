@@ -1,6 +1,6 @@
 from mysql import connector
-from session import Session
-from database import Database
+from .session import Session
+from .database import Database
 from datetime import datetime
 import logging
 import logginghelper

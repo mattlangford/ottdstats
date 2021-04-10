@@ -1,8 +1,8 @@
 # This class represents state information derived from
 from datetime import datetime
-from openttd_stats import OpenTTDStats
-from jsonhelper import JsonHelper
-import logginghelper
+from .openttd_stats import OpenTTDStats
+from .jsonhelper import JsonHelper
+from . import logginghelper
 import copy
 
 
