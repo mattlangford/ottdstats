@@ -1,4 +1,4 @@
-from .jsonhelper import JsonHelper
+from jsonhelper import JsonHelper
 
 
 class OpenTTDStats:

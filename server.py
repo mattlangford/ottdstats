@@ -1,7 +1,7 @@
 import sys
-from . import servercontroller
-from .config import Config
-from .database.databasefactory import DatabaseFactory
+import servercontroller
+from config import Config
+from database.databasefactory import DatabaseFactory
 import getopt
 
 class OpenTTDStatsServer:

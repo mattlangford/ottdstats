@@ -1,7 +1,7 @@
-from .openttd_server import OpenTTDServer
-from .dbconfig import DbConfig
-from .general import GeneralConfig
-from .jsonhelper import JsonHelper
+from openttd_server import OpenTTDServer
+from dbconfig import DbConfig
+from general import GeneralConfig
+from jsonhelper import JsonHelper
 from os import path
 
 

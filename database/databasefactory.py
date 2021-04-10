@@ -1,4 +1,4 @@
-from . import mysql_database
+import mysql_database
 
 
 class DatabaseFactory:

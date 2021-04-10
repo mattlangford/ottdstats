@@ -2,7 +2,7 @@ from libottdadmin2.packets import *
 from libottdadmin2.enums import *
 from libottdadmin2.adminconnection import AdminConnection
 from openttd_stats import OpenTTDStats
-from .openttd_interface import OpenTTDInterface
+from openttd_interface import OpenTTDInterface
 from jsonhelper import JsonHelper
 import select
 import logging
