@@ -1,0 +1,31 @@
+{
+    "config": {
+        "database": {
+            "database": "ottdstats",
+            "host": "localhost",
+            "password": "",
+            "port": 3306,
+            "type": "mysql",
+            "user": ""
+        },
+        "general": {
+            "daemon": false,
+            "interval": 30
+        },
+        "servers": [
+            {
+                "host": "localhost",
+                "interface": "adminport",
+                "name": "server1",
+                "password": "",
+                "port": 3977
+            },
+            {
+                "interface": "ottdpoxy",
+                "name": "server2",
+                "password": "",
+                "url": "http://localhost:3017/stats"
+            }
+        ]
+    }
+}

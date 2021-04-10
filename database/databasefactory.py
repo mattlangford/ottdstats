@@ -1,11 +1,13 @@
-import mysql_database
-
+from mysql.connector import MySQLConnection
 
 class DatabaseFactory:
 
     @staticmethod
     def createdatabase(dbconfig):
         if dbconfig.type == "mysql":
-            return mysql_database.MysqlDatabase(dbconfig)
+            d = vars(dbconfig)
+            d.pop("type")
+            print (d)
+            return MySQLConnection(**d)
         else:
             raise NotImplementedError(dbconfig.type + " is not implemented or not supported")
