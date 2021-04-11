@@ -1,6 +1,9 @@
 from libottdadmin2.packets import *
 from libottdadmin2.enums import *
-from libottdadmin2.adminconnection import AdminConnection
+
+from libottdadmin2.client.sync import OttdSocket, DefaultSelector
+from libottdadmin2.constants import NETWORK_ADMIN_PORT
+
 from openttd_stats import OpenTTDStats
 from interface.openttd_interface import OpenTTDInterface
 from jsonhelper import JsonHelper
@@ -11,29 +14,33 @@ class AdminPortInterface(OpenTTDInterface):
 
     def __init__(self, openttd_server):
         OpenTTDInterface.__init__(self, openttd_server)
+        self.messages = []
 
     def do_query(self):
-
-        connection = AdminConnection()
-
-        connection.configure(
-                name="ottdstats",
-                password=self.server.password,
-                host=self.server.host,
-                port=self.server.port
+        connection = OttdSocket(
+            password=self.server.password,
         )
+        self.selector = DefaultSelector()
+        connection.register_to_selector(self.selector)
 
-        if not connection.connect():
+        def process_message(packet, data):
+            print (f"Got packet: {packet}")
+            self.messages.append((packet, data))
+        connection.on_server_date_raw = process_message
+        connection.on_server_protocol_raw = process_message
+        connection.on_server_welcome_raw = process_message
+
+        if not connection.connect((self.server.host, self.server.port)):
             logging.warning("Could not connect to " + self.server.name)
-            return None
+            raise Exception("Failed to connect")
 
         # The order is important here - since the first poll (game_info) should return version / welcome
         stats = OpenTTDStats()
         stats.game_info = self.__poll_game_info(connection)
-        stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO, ServerCompanyInfo.packetID)
-        stats.client_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO, ServerClientInfo.packetID)
-        company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS, ServerCompanyStats.packetID)
-        company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY, ServerCompanyEconomy.packetID)
+        stats.company_info = self.__poll_admin_array_info(connection, UpdateType.COMPANY_INFO, ServerCompanyInfo.packet_id)
+        stats.client_info = self.__poll_admin_array_info(connection, UpdateType.CLIENT_INFO, ServerClientInfo.packet_id)
+        company_stats = self.__poll_admin_array_info(connection, UpdateType.COMPANY_STATS, ServerCompanyStats.packet_id)
+        company_economy = self.__poll_admin_array_info(connection, UpdateType.COMPANY_ECONOMY, ServerCompanyEconomy.packet_id)
 
         if company_stats:
             self.__match_company_stats(stats.company_info, company_stats)
@@ -69,22 +76,20 @@ class AdminPortInterface(OpenTTDInterface):
 
     def __poll_game_info(self, conn):
         try:
-            conn.send_packet(AdminPoll,
-                                            pollType = UpdateType.DATE,
-                                            extra = PollExtra.ALL)
+            conn.send_packet(AdminPoll())
         except ValidationError:
             return None
 
 
-        version = self.__poll_specific_packet(conn, ServerProtocol.packetID)
+        version = self.__poll_specific_packet(conn, ServerProtocol)
         if version is None:
             self.__packet_error('Protocol')
 
-        game_info =  self.__poll_specific_packet(conn, ServerWelcome.packetID)
+        game_info =  self.__poll_specific_packet(conn, ServerWelcome)
         if game_info is None:
             self.__packet_error('Welcome')
 
-        game_date =  self.__poll_specific_packet(conn, ServerDate.packetID)
+        game_date =  self.__poll_specific_packet(conn, ServerDate)
         if game_date is None:
             self.__packet_error('Date')
         game_info['date'] = game_date['date']
@@ -97,23 +102,22 @@ class AdminPortInterface(OpenTTDInterface):
         # Poll is only unix..
         # the wait here is a hack since we might timeout before receiving it
         # so it may come back when we're not expecting
-        while conn.is_connected:
-            available = select.select([conn], [], [], 3)
+        while True:
+            events = self.selector.select()
+            for key, mask in events:
+                callback = key.data
+                callback(key.fileobj, mask)
 
-            if available[0]:
-                packet_type, packet = conn.recv_packet()
-                if packet_type.packetID == packet_id:
-                    return packet
-            else:
-                return None
+            for packet, data in self.messages:
+                if isinstance(packet, packet_id):
+                    print (f"Found! returning data: {data}")
+                    return data
 
     def __poll_admin_array_info(self, conn, update_type, receive_packet_id):
         array = []
 
         try:
-            conn.send_packet(AdminPoll,
-                                            pollType = update_type,
-                                            extra = PollExtra.ALL)
+            conn.send_packet(AdminPoll())
         except ValidationError:
             return None
 

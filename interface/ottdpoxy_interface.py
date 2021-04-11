@@ -28,7 +28,7 @@ class OttdPoxyInterface(OpenTTDInterface):
             logginghelper.log_warning("Error while contacting " + self.server.name)
             return None
 
-        if not resp.status_code is 200:
+        if resp.status_code != 200:
             logginghelper.log_warning("Http Error " + str(resp.status_code) + " while connecting to " + self.server.name)
             return None
 
@@ -38,7 +38,7 @@ class OttdPoxyInterface(OpenTTDInterface):
             logginghelper.log_warning("Invalid response - no status - from " + self.server.name)
             return None
 
-        if not resp_dict['status'] is 0:
+        if resp_dict['status'] != 0:
             if 'error' in resp_dict:
                 logginghelper.log_warning("Error received from Poxy on " + self.server.name +": '" + resp_dict['error'] + "'")
             else:

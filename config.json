@@ -6,7 +6,7 @@
             "password": "password",
             "port": 3306,
             "type": "mysql",
-            "user": "root"
+            "username": "root"
         },
         "general": {
             "daemon": false,
@@ -17,14 +17,8 @@
                 "host": "localhost",
                 "interface": "adminport",
                 "name": "server1",
-                "password": "",
+                "password": "password",
                 "port": 3977
-            },
-            {
-                "interface": "ottdpoxy",
-                "name": "server2",
-                "password": "",
-                "url": "http://localhost:3017/stats"
             }
         ]
     }

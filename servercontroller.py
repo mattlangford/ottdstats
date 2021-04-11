@@ -20,7 +20,8 @@ class ServerController:
 
         self.__create_server_interfaces()
 
-        self.__load_server_states(self.database)
+        with self.database.connect() as db_session:
+            self.__load_server_states(db_session)
 
         self.__start_thread_loop()
 
@@ -31,11 +32,9 @@ class ServerController:
             self.interfaces.append(ServerInterfaceFactory.createinterface(server))
 
     def __load_server_states(self, db):
-        cur = db.cursor()
-
         # find database server id
-        cur.execute("SELECT id, name FROM server;")
-        db_servers = cur.fetchall()
+        db.execute("SELECT id, name FROM server;")
+        db_servers = db.fetch_results()
         for interface in self.interfaces:
             server = interface.server
 
@@ -45,13 +44,13 @@ class ServerController:
                     break
 
             if server.id == -1:
-                server.id = cur.execute("INSERT INTO server (name) VALUES(%(name)s)", {'name': server.name})
+                server.id = db.insert("INSERT INTO server (name) VALUES(%(name)s)", {'name': server.name})
                 db.commit()
 
             # sanity check
             if not server.id in self.server_states:
                 state = OpenTTDState(server.id)
-                state.load(cur)
+                state.load(db)
                 self.server_states[server.id] = state
 
     def __start_thread_loop(self):
