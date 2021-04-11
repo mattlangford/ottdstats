@@ -45,13 +45,13 @@ class ServerController:
                     break
 
             if server.id == -1:
-                server.id = db.insert("INSERT INTO server (name) VALUES(%(name)s)", {'name': server.name})
+                server.id = cur.execute("INSERT INTO server (name) VALUES(%(name)s)", {'name': server.name})
                 db.commit()
 
             # sanity check
             if not server.id in self.server_states:
                 state = OpenTTDState(server.id)
-                state.load(db)
+                state.load(cur)
                 self.server_states[server.id] = state
 
     def __start_thread_loop(self):
