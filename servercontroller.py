@@ -20,8 +20,7 @@ class ServerController:
 
         self.__create_server_interfaces()
 
-        with self.database.connect() as db_session:
-            self.__load_server_states(db_session)
+        self.__load_server_states(self.database)
 
         self.__start_thread_loop()
 
@@ -32,9 +31,11 @@ class ServerController:
             self.interfaces.append(ServerInterfaceFactory.createinterface(server))
 
     def __load_server_states(self, db):
+        cur = db.cursor()
+
         # find database server id
-        db.execute("SELECT id, name FROM server;")
-        db_servers = db.fetch_results()
+        cur.execute("SELECT id, name FROM server;")
+        db_servers = cur.fetchall()
         for interface in self.interfaces:
             server = interface.server
 

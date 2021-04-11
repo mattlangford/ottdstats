@@ -3,10 +3,10 @@
         "database": {
             "database": "ottdstats",
             "host": "localhost",
-            "password": "",
+            "password": "password",
             "port": 3306,
             "type": "mysql",
-            "user": ""
+            "user": "root"
         },
         "general": {
             "daemon": false,

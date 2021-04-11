@@ -1,4 +1,4 @@
-from mysql.connector import MySQLConnection
+import mysql.connector
 
 class DatabaseFactory:
 
@@ -8,6 +8,9 @@ class DatabaseFactory:
             d = vars(dbconfig)
             d.pop("type")
             print (d)
-            return MySQLConnection(**d)
+            c = mysql.connector.connect(**d)
+            if not c.is_connected():
+                raise Exception("Can't connect to database")
+            return c
         else:
             raise NotImplementedError(dbconfig.type + " is not implemented or not supported")
