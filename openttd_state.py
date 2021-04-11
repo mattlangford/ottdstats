@@ -53,7 +53,7 @@ class OpenTTDState:
             for company_id in self.current_companies.copy():
                 found = False
                 for company_info in new_snapshot.company_info:
-                    if company_id == company_info['companyID']:
+                    if company_id == company_info['company_id']:
                         found = True
                         break
                 if not found:
@@ -63,9 +63,9 @@ class OpenTTDState:
             for company_info in new_snapshot.company_info:
                 clients = []
                 for client in  new_snapshot.client_info:
-                    if client['play_as'] == company_info['companyID']:
+                    if client['play_as'] == company_info['company_id']:
                         clients.append(client)
-                if not company_info['companyID'] in self.current_companies:
+                if not company_info['company_id'] in self.current_companies:
                     self.__start_company(db, company_info, clients)
                 else:
                     self.__update_company(db, company_info, clients)
@@ -77,7 +77,7 @@ class OpenTTDState:
             for company in new_snapshot.company_info:
                 clients = []
                 for client in  new_snapshot.client_info:
-                    if client['play_as'] == company['companyID']:
+                    if client['play_as'] == company['company_id']:
                         clients.append(client)
                 self.__start_company(db, company, clients)
 
@@ -115,8 +115,8 @@ class OpenTTDState:
                     'map_size_x': game_info['x'],
                     'map_size_y': game_info['y'],
                     'version': game_info['version'],
-                    'landscape': game_info['landscape'],
-                    'map_name': game_info['map_name'],
+                    'landscape': game_info['landscape'].value,
+                    'map_name': "N/A",
                     'seed': game_info['seed']
                 }
 
@@ -127,11 +127,11 @@ class OpenTTDState:
 
     def __insert_game_history(self, db, new_snapshot):
         for company in new_snapshot.company_info:
-            assert company['companyID'] in self.current_companies
+            assert company['company_id'] in self.current_companies
 
             insert = {
                 'game_id': self.current_game_id,
-                'company_id': self.current_companies[company['companyID']]['id'],
+                'company_id': self.current_companies[company['company_id']]['id'],
                 'current_company_name': company['name'],
                 'current_company_manager':  company['manager'],
                 'game_date': new_snapshot.game_info['date'].isoformat(),
@@ -148,25 +148,25 @@ class OpenTTDState:
                 economy = company['economy']
                 insert['money'] = economy['money']
                 if len(economy['history']) > 0:
-                    insert['value'] = economy['history'][0]['companyValue']
+                    insert['value'] = economy['history'][0].value
                 insert['income'] = economy['income']
-                insert['loan'] = economy['currentLoan']
-                insert['delivered_cargo'] = economy['deliveredCargo']
+                insert['loan'] = economy['current_loan']
+                insert['delivered_cargo'] = economy['delivered']
 
             if 'stats' in company:
                 stats = company['stats']
                 stations = stats['stations']
                 vehicles = stats['vehicles']
-                insert['station_bus'] = stations['bus']
-                insert['station_lorry'] = stations['lorry']
-                insert['station_plane'] = stations['plane']
-                insert['station_ship'] = stations['ship']
-                insert['station_train'] = stations['train']
-                insert['vehicle_bus'] = vehicles['bus']
-                insert['vehicle_lorry'] = vehicles['lorry']
-                insert['vehicle_plane'] = vehicles['plane']
-                insert['vehicle_ship'] = vehicles['ship']
-                insert['vehicle_train'] = vehicles['train']
+                insert['station_bus'] = stations.bus
+                insert['station_lorry'] = stations.lorry
+                insert['station_plane'] = stations.plane
+                insert['station_ship'] = stations.ship
+                insert['station_train'] = stations.train
+                insert['vehicle_bus'] = vehicles.bus
+                insert['vehicle_lorry'] = vehicles.lorry
+                insert['vehicle_plane'] = vehicles.plane
+                insert['vehicle_ship'] = vehicles.ship
+                insert['vehicle_train'] = vehicles.train
 
             db.execute("INSERT INTO game_history (game_id, company_id, current_company_name, current_company_manager, "
                 + "game_date, real_date, money, value, income, loan, delivered_cargo, station_bus, station_lorry, "
@@ -182,7 +182,7 @@ class OpenTTDState:
                     'company_id': company_id,
                     'first_join': datetime.now().isoformat(),
                     'hostname': client['hostname'],
-                    'client_id': client['clientID'],
+                    'client_id': client['client_id'],
                     'name': client['name']
                 }
 
@@ -191,13 +191,13 @@ class OpenTTDState:
 
     def __update_company(self, db, company_info, client_info):
 
-        assert company_info['companyID'] in self.current_companies
+        assert company_info['company_id'] in self.current_companies
 
-        existing_company = self.current_companies[company_info['companyID']]
+        existing_company = self.current_companies[company_info['company_id']]
         for client in client_info:
             key = client['name'] + '|' + client['hostname']
             if key not in existing_company['clients']:
-                existing_company['clients'][key] = client['clientID']
+                existing_company['clients'][key] = client['client_id']
                 self.__insert_client(db, client, existing_company['id'])
 
         if(not existing_company['name'] == company_info['name']
@@ -222,13 +222,14 @@ class OpenTTDState:
     def __start_company(self, db, company_info, client_info):
         new_company = {
             'game_id': self.current_game_id,
-            'company_id': company_info['companyID'],
+            'company_id': company_info['company_id'],
             'start': datetime.now().isoformat(),
             'name': company_info['name'],
-            'color': company_info['colour'],
-            'is_ai': company_info['isAI'],
+            'color': company_info['colour'].value,
+            'is_ai': company_info['is_ai'],
             'manager': company_info['manager']
         }
+        print (new_company)
         new_company['id'] = db.insert(
             'INSERT INTO game_company (game_id, company_id, start, name, manager, color, is_ai) '
             + 'VALUES(%(game_id)s, %(company_id)s, %(start)s, %(name)s, %(manager)s, %(color)s, %(is_ai)s)', new_company)
@@ -240,7 +241,7 @@ class OpenTTDState:
         for client in client_info:
             key = client['name'] + '|' + client['hostname']
 
-            new_company['clients'][key] = client['clientID']
+            new_company['clients'][key] = client['client_id']
             self.__insert_client(db, client, new_company['id'])
 
     def __end_company(self, db, id):

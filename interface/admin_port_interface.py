@@ -9,6 +9,7 @@ from interface.openttd_interface import OpenTTDInterface
 from jsonhelper import JsonHelper
 import select
 import logging
+import time
 
 class AdminPortInterface(OpenTTDInterface):
 
@@ -24,11 +25,9 @@ class AdminPortInterface(OpenTTDInterface):
         connection.register_to_selector(self.selector)
 
         def process_message(packet, data):
-            print (f"Got packet: {packet}")
+            print (f"Got packet: {packet}: {data}")
             self.messages.append((packet, data))
-        connection.on_server_date_raw = process_message
-        connection.on_server_protocol_raw = process_message
-        connection.on_server_welcome_raw = process_message
+        connection.on_raw = process_message
 
         if not connection.connect((self.server.host, self.server.port)):
             logging.warning("Could not connect to " + self.server.name)
@@ -50,46 +49,46 @@ class AdminPortInterface(OpenTTDInterface):
         connection.disconnect()
 
         # normalize values (convert to unicode)
-        stats.game_info = JsonHelper.from_json(JsonHelper.to_json(stats.game_info))
-        stats.company_info = JsonHelper.from_json(JsonHelper.to_json(stats.company_info))
-        stats.client_info = JsonHelper.from_json(JsonHelper.to_json(stats.client_info))
+        # stats.game_info = JsonHelper.from_json(JsonHelper.to_json(stats.game_info))
+        # stats.company_info = JsonHelper.from_json(JsonHelper.to_json(stats.company_info))
+        # stats.client_info = JsonHelper.from_json(JsonHelper.to_json(stats.client_info))
 
         return stats
 
     def __match_company_stats(self, companies, company_sub_info):
-
         for sub in company_sub_info:
             for comp in companies:
-                if comp['companyID'] == sub['companyID']:
-                    sub['stats'].pop("companyID", None)
-                    comp['stats'] = sub['stats']
+                if comp['company_id'] == sub['company_id']:
+                    sub.pop("company_id", None)
+                    comp['stats'] = sub
                     break
 
     def __match_company_economy(self, companies, company_sub_info):
-
         for sub in company_sub_info:
             for comp in companies:
-                if comp['companyID'] == sub['companyID']:
-                    sub.pop("companyID", None)
+                if comp['company_id'] == sub['company_id']:
+                    sub.pop("company_id", None)
                     comp['economy'] = sub
                     break
 
     def __poll_game_info(self, conn):
         try:
-            conn.send_packet(AdminPoll())
+            poll = AdminPoll()
+            poll.encode(type=UpdateType.DATE, extra=PollExtra.ALL)
+            conn.send_packet(poll)
         except ValidationError:
             return None
 
 
-        version = self.__poll_specific_packet(conn, ServerProtocol)
+        version = self.__poll_specific_packet(conn, ServerProtocol.packet_id)
         if version is None:
             self.__packet_error('Protocol')
 
-        game_info =  self.__poll_specific_packet(conn, ServerWelcome)
+        game_info =  self.__poll_specific_packet(conn, ServerWelcome.packet_id)
         if game_info is None:
             self.__packet_error('Welcome')
 
-        game_date =  self.__poll_specific_packet(conn, ServerDate)
+        game_date =  self.__poll_specific_packet(conn, ServerDate.packet_id)
         if game_date is None:
             self.__packet_error('Date')
         game_info['date'] = game_date['date']
@@ -102,32 +101,35 @@ class AdminPortInterface(OpenTTDInterface):
         # Poll is only unix..
         # the wait here is a hack since we might timeout before receiving it
         # so it may come back when we're not expecting
-        while True:
+        for i in range(3):
+            for element in self.messages:
+                if element[0].packet_id == packet_id:
+                    data = element[1]
+                    self.messages.remove(element)
+                    return data._asdict()
+
+            time.sleep(0.1)
+
             events = self.selector.select()
             for key, mask in events:
                 callback = key.data
                 callback(key.fileobj, mask)
 
-            for packet, data in self.messages:
-                if isinstance(packet, packet_id):
-                    print (f"Found! returning data: {data}")
-                    return data
+        print (f"Failed to find packet.")
+        return None
 
     def __poll_admin_array_info(self, conn, update_type, receive_packet_id):
         array = []
-
         try:
-            conn.send_packet(AdminPoll())
+            poll = AdminPoll()
+            poll.encode(type=update_type, extra=PollExtra.ALL)
+            conn.send_packet(poll)
         except ValidationError:
             return None
 
-        while True:
-            packet = self.__poll_specific_packet(conn, receive_packet_id)
-            if not packet is None:
-                array.append(packet)
-            else:
-                break
-
+        packet = self.__poll_specific_packet(conn, receive_packet_id)
+        if packet is not None:
+            array.append(packet)
         return array
 
     def __packet_error(self, packet_name):

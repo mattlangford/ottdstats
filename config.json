@@ -9,7 +9,7 @@
             "username": "root"
         },
         "general": {
-            "daemon": false,
+            "daemon": true,
             "interval": 30
         },
         "servers": [
