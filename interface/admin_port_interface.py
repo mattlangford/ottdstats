@@ -27,7 +27,13 @@ class AdminPortInterface(OpenTTDInterface):
         def process_message(packet, data):
             print (f"Got packet: {packet}: {data}")
             self.messages.append((packet, data))
-        connection.on_raw = process_message
+        connection.on_server_protocol_raw = process_message
+        connection.on_server_welcome_raw = process_message
+        connection.on_server_date_raw = process_message
+        connection.on_server_company_info_raw = process_message
+        connection.on_server_client_info_raw = process_message
+        connection.on_server_company_stats_raw = process_message
+        connection.on_server_company_economy_raw = process_message
 
         if not connection.connect((self.server.host, self.server.port)):
             logging.warning("Could not connect to " + self.server.name)
